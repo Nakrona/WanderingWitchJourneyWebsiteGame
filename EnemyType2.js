@@ -2,7 +2,7 @@
  * EnemyType2.js
  * Musuh Jenis 2 (Turunan dari Enemy - OOP, Liskov Substitution & Open-Closed Principle).
  * Ciri khas:
- * 1. Memiliki 2 HP dan bernilai 20 poin saat dihancurkan.
+ * 1. Memiliki 2 HP dan bernilai 10 poin saat dihancurkan.
  * 2. Menggunakan Skill 3: Lingkaran proyektil gabungan Skill 1 dan Skill 2 yang melingkarinya secara dinamis.
  * 3. Berwarna / ber-aura ungu magis (Elite Enemy).
  * 4. Faksi B: Proyektilnya tidak melukai sesama musuh (Faksi B), hanya melukai Player (Faksi A).
@@ -15,7 +15,7 @@ class EnemyType2 extends Enemy {
         this.color = "#a855f7"; // Ungu magis
         this.maxHp = 2;
         this.hp = 2;
-        this.scoreValue = 20;
+        this.scoreValue = 10;
         this.containerSelector = containerSelector;
 
         // Berikan penanda class CSS khusus untuk styling aura ungu

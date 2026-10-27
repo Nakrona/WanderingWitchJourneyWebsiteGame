@@ -1270,7 +1270,7 @@ class GameManager {
                         if (enemy.destroy) enemy.destroy();
                         this.hazards.splice(j, 1);
 
-                        // Tambahkan poin dari enemy yang dihancurkan (+10 pts untuk Type 1, +20 pts untuk Type 2)
+                        // Tambahkan poin dari enemy yang dihancurkan (+10 poin)
                         this.stageScore += earnedScore;
                         this.totalScore += earnedScore;
                         this.updateScoreDisplay();
