@@ -101,7 +101,7 @@ class GameManager {
         this.backgroundImage.onerror = () => {
             this.isBackgroundLoaded = false;
         };
-        this.backgroundImage.src = "background.png";
+        this.backgroundImage.src = "Background.png";
 
         // Sound Effects (SFX) Setup
         this.sfxSkillCast = document.getElementById("sfx-skill-cast") || new Audio("SkillCasting.mp3");
@@ -282,9 +282,9 @@ class GameManager {
 
         if (isType2) {
             this.type2EnemiesSpawnedInStage++;
-            return new EnemyType2(spawnCoord.x, spawnCoord.y, 46, 46, "Enemy.png", ".canvas-container", speed * 0.9);
+            return new EnemyType2(spawnCoord.x, spawnCoord.y, 46, 46, "enemy.png", ".canvas-container", speed * 0.9);
         }
-        return new Enemy(spawnCoord.x, spawnCoord.y, width, height, "Enemy.png", ".canvas-container", speed);
+        return new Enemy(spawnCoord.x, spawnCoord.y, width, height, "enemy.png", ".canvas-container", speed);
     }
 
     replenishHazards() {

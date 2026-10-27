@@ -8,7 +8,7 @@
  * 4. Faksi B: Proyektilnya tidak melukai sesama musuh (Faksi B), hanya melukai Player (Faksi A).
  */
 class EnemyType2 extends Enemy {
-    constructor(x, y, width = 46, height = 46, imageSrc = "Enemy.png", containerSelector = ".canvas-container", speed = 1.0) {
+    constructor(x, y, width = 46, height = 46, imageSrc = "enemy.png", containerSelector = ".canvas-container", speed = 1.0) {
         super(x, y, width, height, imageSrc, containerSelector, speed);
 
         this.enemyType = 2;

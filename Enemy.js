@@ -1,5 +1,5 @@
 class Enemy {
-    constructor(x, y, width = 42, height = 42, imageSrc = "Enemy.png", containerSelector = ".canvas-container", speed = 1.2) {
+    constructor(x, y, width = 42, height = 42, imageSrc = "enemy.png", containerSelector = ".canvas-container", speed = 1.2) {
         this.x = x;
         this.y = y;
         this.width = width;
