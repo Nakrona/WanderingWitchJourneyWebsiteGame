@@ -252,13 +252,13 @@ class GameManager {
             };
         }
 
-        // Proporsi spawn: Persentase kemunculan EnemyType 2 meningkat seiring naiknya Stage,
-        // namun tetap DIJAMIN muncul minimal 1 kali di setiap stage!
+        // Proporsi spawn: Persentase kemunculan EnemyType 2 meningkat tipis-tipis seiring naiknya Stage,
+        // namun tetap dijamin muncul minimal 1 kali di setiap stage.
         const activeType2Count = this.hazards.filter((h) => h.enemyType === 2).length;
         
-        // Peluang spawn Type 2 naik dinamis berdasarkan stage:
-        // Stage 1 = 20%, Stage 2 = 30%, Stage 3 = 40%, Stage 4 = 50%, Stage 5 = 60%, Stage 6+ = 65% (cap)
-        const type2SpawnRate = Math.min(0.65, 0.20 + (this.stage - 1) * 0.10);
+        // Peluang spawn Type 2 naik tipis-tipis (+4% per stage, dari base 20% hingga cap 50%):
+        // Stage 1 = 20%, Stage 2 = 24%, Stage 3 = 28%, Stage 4 = 32%, Stage 5 = 36%, Stage 6 = 40%, dst. (maks 50%)
+        const type2SpawnRate = Math.min(0.50, 0.20 + (this.stage - 1) * 0.04);
 
         // Batas maksimal musuh Type 2 aktif bersamaan di layar meningkat secara berimbang:
         // Stage 1-2: maks 1 | Stage 3-4: maks 2 | Stage 5+: maks 3
