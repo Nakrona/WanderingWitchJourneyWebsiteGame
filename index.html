@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WanderingWitchJourney</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-wrapper">
+        <!-- Danger Alert Banner -->
+        <div id="danger-alert" class="danger-banner">DANGER!</div>
+
+        <!-- Heal Alert Banner -->
+        <div id="heal-alert" class="heal-banner">+1 HP!</div>
+
+        <!-- Header with Game Title, Stats, and HUD Restart Button -->
+        <header class="game-header">
+            <h1>WanderingWitchJourney</h1>
+            <div class="stats-panel">
+                <div class="stat-item">
+                    <span>Stage: </span>
+                    <strong id="stage-display" style="color: #facc15;">1</strong>
+                </div>
+                <div class="stat-item">
+                    <span>Score: </span>
+                    <strong id="score-display">0 / 100</strong>
+                </div>
+                <div class="stat-item">
+                    <span>HP: </span>
+                    <strong id="hp-display" class="hp-display">❤️❤️❤️ (3/3)</strong>
+                </div>
+                <div class="stat-item">
+                    <span>Time: </span>
+                    <strong id="timer-display">60s</strong>
+                </div>
+
+                <!-- Skill Cooldown Indicators (Dynamic Loadout Slot Z, X, C) -->
+                <div class="skills-hud">
+                    <div class="skill-badge" id="slot0-badge">
+                        <span class="skill-key">Z</span>
+                        <span class="skill-name" id="slot0-name">Skill 1</span>
+                        <span class="skill-status" id="slot0-status">READY</span>
+                    </div>
+                    <div class="skill-badge" id="slot1-badge">
+                        <span class="skill-key">X</span>
+                        <span class="skill-name" id="slot1-name">Skill 2</span>
+                        <span class="skill-status" id="slot1-status">READY</span>
+                    </div>
+                    <div class="skill-badge" id="slot2-badge">
+                        <span class="skill-key">C</span>
+                        <span class="skill-name" id="slot2-name">Skill 5</span>
+                        <span class="skill-status" id="slot2-status">READY</span>
+                    </div>
+                </div>
+
+                <button id="header-restart-btn" class="header-btn">Restart</button>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="800" height="480"></canvas>
+
+            <!-- Player GIF Image Element -->
+            <img id="player-gif" src="player.gif" alt="Player Character">
+
+            <!-- Main Menu Overlay with Skill Loadout Selection -->
+            <div id="main-menu-overlay" class="game-overlay">
+                <h2>WanderingWitchJourney</h2>
+                <p class="menu-desc">Pilih 3 Skill yang akan kamu bawa ke dalam pertempuran (Slot Z, X, C):</p>
+
+                <div class="skill-selection-grid" id="skill-selection-grid">
+                    <div class="skill-card selected" data-skill-id="skill1" data-slot="Z">
+                        <div class="skill-slot-tag">Slot [Z]</div>
+                        <div class="skill-card-icon">❄️</div>
+                        <div class="skill-card-title">Skill 1: Frost Bolt</div>
+                        <div class="skill-card-desc">Peluru energi es menusuk lurus. CD: 1.5s</div>
+                    </div>
+                    <div class="skill-card selected" data-skill-id="skill2" data-slot="X">
+                        <div class="skill-slot-tag">Slot [X]</div>
+                        <div class="skill-card-icon">🔥</div>
+                        <div class="skill-card-title">Skill 2: Flame Plasma</div>
+                        <div class="skill-card-desc">Plasma api cepat berdaya hancur tinggi. CD: 2.5s</div>
+                    </div>
+                    <div class="skill-card" data-skill-id="skill3">
+                        <div class="skill-slot-tag">Pilih</div>
+                        <div class="skill-card-icon">🌀</div>
+                        <div class="skill-card-title">Skill 3: Orbiting Orbs</div>
+                        <div class="skill-card-desc">4 bola es &amp; api melingkari tubuh selama 7 detik. CD: 9s</div>
+                    </div>
+                    <div class="skill-card" data-skill-id="skill4">
+                        <div class="skill-slot-tag">Pilih</div>
+                        <div class="skill-card-icon">⚡</div>
+                        <div class="skill-card-title">Skill 4: Continuous Beam</div>
+                        <div class="skill-card-desc">Laser 2s menembus musuh. Syarat: 3 Kill &amp; CD: 7s</div>
+                    </div>
+                    <div class="skill-card selected" data-skill-id="skill5" data-slot="C">
+                        <div class="skill-slot-tag">Slot [C]</div>
+                        <div class="skill-card-icon">🛡️</div>
+                        <div class="skill-card-title">Skill 5: Hex Shield</div>
+                        <div class="skill-card-desc">Perisai heksagon, stack hingga 2X menahan damage. CD: 5s</div>
+                    </div>
+                </div>
+
+                <div class="skill-selection-summary">
+                    <span id="loadout-summary-text">Loadout Aktif: <strong>[Z] Skill 1</strong> | <strong>[X] Skill 2</strong> | <strong>[C] Skill 5</strong></span>
+                </div>
+
+                <button id="play-btn">Mulai Bermain (Play)</button>
+            </div>
+
+            <!-- Stage Clear Overlay -->
+            <div id="stage-clear-overlay" class="game-overlay hidden">
+                <h2 class="win" id="stage-clear-title">STAGE 1 CLEARED! 🎉</h2>
+                <p id="stage-clear-desc" class="overlay-desc">Target 100 poin tercapai!</p>
+                <div class="stage-info-box">
+                    <p>Stage Berikutnya: <strong id="next-stage-name" style="color: #38bdf8;">Stage 2</strong></p>
+                    <p>Target Skor: <strong id="next-stage-target" style="color: #facc15;">120 Poin</strong></p>
+                    <p>Komposisi Spawn: <strong id="next-stage-spikes" style="color: #ef4444;">5 Enemy + 7 Koin</strong></p>
+                    <p>Bonus Clear: <strong style="color: #4ade80;">+1 HP Restored!</strong></p>
+                </div>
+                <button id="next-stage-btn" class="header-btn" style="padding: 12px 28px; font-size: 16px;">Lanjut ke Stage Berikutnya (Enter / Space) ➔</button>
+            </div>
+
+            <!-- Win/Lose Overlay -->
+            <div id="game-status-overlay" class="game-overlay hidden">
+                <h2 id="game-status-message">GAME OVER</h2>
+                <p id="game-over-desc" class="overlay-desc">Kamu mencapai Stage 1</p>
+                <div class="game-over-btn-group">
+                    <button id="return-menu-btn" class="overlay-btn secondary-btn">Pilih Ulang Skill</button>
+                    <button id="restart-btn" class="overlay-btn primary-btn">Restart Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customization and Control Panel -->
+        <div class="control-panel">
+            <h3>Customization &amp; Controls</h3>
+            <div class="control-row">
+                <label for="coin-color-picker">Coin Color:</label>
+                <input type="color" id="coin-color-picker" value="#facc15">
+
+                <label for="coin-size-slider">Coin Size:</label>
+                <input type="range" id="coin-size-slider" min="6" max="22" value="12">
+                <span id="coin-size-value">12px</span>
+            </div>
+
+            <div class="control-row">
+                <label for="bg-upload">Background Image:</label>
+                <input type="file" id="bg-upload" accept="image/*">
+            </div>
+
+            <p class="controls-hint">Controls: Gerak dengan <strong>WASD / Tombol Panah</strong>. Tembak: <strong>Z</strong>, <strong>X</strong>, dan <strong>C</strong> sesuai 3 Skill yang kamu pilih di Main Menu (Skill 1 s/d Skill 5: Frost Bolt, Flame Plasma, Orbiting Orbs, Continuous Beam, Hex Shield). <strong>Sistem Faksi:</strong> Player (Faksi A) vs Musuh (Faksi B). Musuh Jenis 1 (1 HP, 10 pts) &amp; Musuh Jenis 2 (2 HP, 20 pts, Skill 3). Skill tidak melukai sesama rekan!</p>
+        </div>
+    </div>
+
+    <!-- Sound Effects Audio Elements -->
+    <audio id="sfx-skill-cast" src="SkillCasting.mp3" preload="auto"></audio>
+    <audio id="sfx-hit" src="Hit.mp3" preload="auto"></audio>
+    <audio id="sfx-win" src="win.mp3" preload="auto"></audio>
+    <audio id="sfx-lose" src="lose.mp3" preload="auto"></audio>
+    <audio id="sfx-heal" src="heal.mp3" preload="auto"></audio>
+
+    <!-- Script Import Order (OOP & Dependency Hierarchy) -->
+    <script src="Faction.js"></script>
+    <script src="SkillActivationCalculator.js"></script>
+    <script src="BaseSkill.js"></script>
+    <script src="Skill1.js"></script>
+    <script src="Skill2.js"></script>
+    <script src="Skill3.js"></script>
+    <script src="Skill4.js"></script>
+    <script src="Skill5.js"></script>
+    <script src="Enemy.js"></script>
+    <script src="EnemyType2.js"></script>
+    <script src="Spike.js"></script>
+    <script src="Coin.js"></script>
+    <script src="Potion.js"></script>
+    <script src="Player.js"></script>
+    <script src="Timer.js"></script>
+    <script src="GameManager.js"></script>
+</body>
+</html>

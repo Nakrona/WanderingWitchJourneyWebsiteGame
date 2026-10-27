@@ -1,0 +1,737 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #121826;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.game-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #1f293d;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.game-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.game-header h1 {
+    font-size: 20px;
+    color: #e2e8f0;
+}
+
+.stats-panel {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 18px;
+}
+
+.stat-item span {
+    color: #94a3b8;
+}
+
+.stat-item strong {
+    color: #38bdf8;
+}
+
+/* Header Restart Button */
+.header-btn {
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: #3b82f6;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.header-btn:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+}
+
+.header-btn:active {
+    transform: translateY(0);
+}
+
+/* HP Display */
+.hp-display {
+    color: #f43f5e;
+    letter-spacing: 1px;
+    font-size: 16px;
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.hp-display.damaged {
+    animation: hp-shake 0.35s ease;
+}
+
+.hp-display.healed {
+    animation: hp-pulse 0.35s ease;
+}
+
+@keyframes hp-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-5px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(3px); }
+}
+
+@keyframes hp-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); color: #34d399; }
+}
+
+/* Danger Banner */
+.danger-banner {
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background-color: #ef4444;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    padding: 10px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+}
+
+.danger-banner.active {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Heal Banner */
+.heal-banner {
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background-color: #10b981;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    padding: 10px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+}
+
+.heal-banner.active {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.canvas-container {
+    position: relative;
+    width: 800px;
+    height: 480px;
+}
+
+#gameCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #0f172a;
+    border: 3px solid #334155;
+    border-radius: 8px;
+    display: block;
+}
+
+/* Player Character GIF Styling */
+#player-gif {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 5;
+    image-rendering: pixelated;
+    transition: opacity 0.1s ease;
+}
+
+#player-gif.hit-blinking {
+    transition: none !important;
+    animation: player-flicker 0.14s steps(1) infinite;
+}
+
+@keyframes player-flicker {
+    0%, 49% {
+        opacity: 0.15;
+        filter: brightness(1.8) drop-shadow(0 0 8px rgba(239, 68, 68, 0.9));
+    }
+    50%, 100% {
+        opacity: 1;
+        filter: none;
+    }
+}
+
+/* Game Status Overlay */
+.game-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.88);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    z-index: 20;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+}
+
+.game-overlay.hidden {
+    display: none;
+}
+
+.game-overlay h2 {
+    font-size: 40px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+.game-overlay h2.win {
+    color: #4ade80;
+    text-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+}
+
+.game-overlay h2.lose {
+    color: #ef4444;
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+}
+
+.game-over-btn-group {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.overlay-btn {
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.overlay-btn.primary-btn {
+    background-color: #3b82f6;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+}
+
+.overlay-btn.primary-btn:hover {
+    background-color: #2563eb;
+    transform: translateY(-2px);
+}
+
+.overlay-btn.secondary-btn {
+    background-color: #0284c7;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+}
+
+.overlay-btn.secondary-btn:hover {
+    background-color: #0369a1;
+    transform: translateY(-2px);
+}
+
+.overlay-btn:active {
+    transform: translateY(0);
+}
+
+#restart-btn {
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    background-color: #3b82f6;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+#restart-btn:hover {
+    background-color: #2563eb;
+    transform: translateY(-2px);
+}
+
+#restart-btn:active {
+    transform: translateY(0);
+}
+
+/* Main Menu Overlay & Play Button Styling */
+#main-menu-overlay {
+    background: radial-gradient(circle at center, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+    z-index: 25;
+}
+
+#main-menu-overlay h2 {
+    color: #38bdf8;
+    text-shadow: 0 0 25px rgba(56, 189, 248, 0.65);
+    font-size: 38px;
+    letter-spacing: 3px;
+    margin-bottom: 6px;
+}
+
+#play-btn {
+    padding: 14px 48px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #ffffff;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.45);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+}
+
+#play-btn:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 6px 22px rgba(59, 130, 246, 0.65);
+    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+}
+
+#play-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Customization Panel */
+.control-panel {
+    width: 100%;
+    margin-top: 15px;
+    padding: 12px 16px;
+    background-color: #182234;
+    border-radius: 8px;
+    border: 1px solid #2d3b55;
+}
+
+.control-panel h3 {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #38bdf8;
+    text-transform: uppercase;
+}
+
+.control-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.control-row input[type="color"] {
+    border: none;
+    width: 36px;
+    height: 30px;
+    cursor: pointer;
+    border-radius: 4px;
+    background: transparent;
+}
+
+.control-row input[type="range"] {
+    cursor: pointer;
+}
+
+.control-row input[type="file"] {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.control-row input[type="file"]::file-selector-button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    background-color: #0f172a;
+    color: #e2e8f0;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.control-row input[type="file"]::file-selector-button:hover {
+    background-color: #334155;
+}
+
+.controls-hint {
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+/* Skills Cooldown HUD */
+.skills-hud {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 6px;
+}
+
+.skill-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.skill-key {
+    background-color: #3b82f6;
+    color: #ffffff;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.skill-name {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.skill-status {
+    color: #4ade80;
+    font-weight: 700;
+    font-size: 11px;
+    min-width: 42px;
+    text-align: center;
+}
+
+.skill-badge.cooldown {
+    border-color: #475569;
+    opacity: 0.75;
+}
+
+.skill-badge.cooldown .skill-key {
+    background-color: #64748b;
+}
+
+.skill-badge.cooldown .skill-status {
+    color: #f59e0b;
+}
+
+/* Projectile GIF Styling */
+.projectile-gif {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 6;
+    image-rendering: pixelated;
+}
+
+/* Enemy Sprite Styling (.png & .gif) */
+.enemy-sprite {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 4;
+    image-rendering: pixelated;
+}
+
+.overlay-desc {
+    color: #94a3b8;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.stage-info-box {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid #334155;
+    padding: 14px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1.8;
+    text-align: left;
+    margin-bottom: 8px;
+}
+
+/* Musuh Jenis 2 (Ungu / Elite Enemy dengan Skill 3) */
+.enemy-sprite.enemy-type2 {
+    filter: hue-rotate(95deg) brightness(1.1) drop-shadow(0 0 8px rgba(168, 85, 247, 0.85));
+}
+
+/* Skill 3 Orbiting Projectiles */
+.skill3-orb {
+    z-index: 5;
+    pointer-events: none;
+    transition: transform 0.05s linear;
+}
+
+.skill3-orb-type1 {
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.9));
+}
+
+.skill3-orb-type2 {
+    filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.9));
+}
+
+
+/* Skill Badge Active State (Saat Skill 4 Beam Aktif Menembak) */
+.skill-badge.active {
+    border-color: #06b6d4;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.65);
+    background: rgba(8, 51, 68, 0.5);
+    animation: beam-pulse 0.4s infinite alternate;
+}
+
+.skill-badge.active .skill-key {
+    background-color: #06b6d4;
+}
+
+.skill-badge.active .skill-status {
+    color: #38bdf8;
+    font-weight: 800;
+}
+
+@keyframes beam-pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.04); }
+}
+
+
+/* Skill 4 Continuous Beam DOM Overlay Styling (Dual-Layer Visual) */
+.skill4-beam-fx {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 7;
+    overflow: visible;
+}
+
+.skill4-beam-fx .beam-outer-aura {
+    position: absolute;
+    top: -14px;
+    left: 0;
+    width: 100%;
+    height: calc(100% + 28px);
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0) 0%, rgba(56, 189, 248, 0.45) 50%, rgba(6, 182, 212, 0) 100%);
+    filter: blur(8px);
+    animation: beam-flicker 0.08s infinite alternate;
+}
+
+.skill4-beam-fx .beam-core-glow {
+    position: absolute;
+    top: 3px;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 6px);
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.75) 0%, rgba(186, 230, 253, 0.95) 50%, rgba(14, 165, 233, 0.75) 100%);
+    box-shadow: 0 0 16px #00f0ff, 0 0 32px rgba(2, 132, 199, 0.85);
+    border-radius: 4px;
+}
+
+.skill4-beam-fx .beam-white-laser {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 8px;
+    background: #ffffff;
+    box-shadow: 0 0 10px #ffffff, 0 0 18px #38bdf8;
+    border-radius: 4px;
+}
+
+.skill4-beam-fx .beam-muzzle-flash {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    width: 52px;
+    height: 52px;
+    background: radial-gradient(circle, #ffffff 15%, #38bdf8 55%, transparent 75%);
+    border-radius: 50%;
+    box-shadow: 0 0 24px #38bdf8;
+    animation: muzzle-spin 0.2s linear infinite;
+}
+
+@keyframes beam-flicker {
+    0% { opacity: 0.85; transform: scaleY(0.96); }
+    100% { opacity: 1; transform: scaleY(1.04); }
+}
+
+@keyframes muzzle-spin {
+    from { transform: translateY(-50%) translateX(-50%) rotate(0deg); }
+    to { transform: translateY(-50%) translateX(-50%) rotate(360deg); }
+}
+
+
+/* Skill Badge Locked / Charge Progress (Butuh Kill Musuh) */
+.skill-badge.locked {
+    border-color: #d97706;
+    background: rgba(69, 26, 3, 0.45);
+    opacity: 0.9;
+}
+
+.skill-badge.locked .skill-key {
+    background-color: #b45309;
+}
+
+.skill-badge.locked .skill-status {
+    color: #f59e0b;
+    font-weight: 700;
+}
+
+/* Skill Badge Ready with Full Kill Charge */
+.skill-badge.ready-charge {
+    border-color: #06b6d4;
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.75);
+    background: rgba(8, 51, 68, 0.6);
+    animation: ready-glow 0.8s infinite alternate;
+}
+
+.skill-badge.ready-charge .skill-key {
+    background-color: #0891b2;
+}
+
+.skill-badge.ready-charge .skill-status {
+    color: #22d3ee;
+    font-weight: 800;
+}
+
+@keyframes ready-glow {
+    from { box-shadow: 0 0 6px rgba(6, 182, 212, 0.5); }
+    to { box-shadow: 0 0 14px rgba(34, 211, 238, 0.9); }
+}
+
+
+/* Main Menu Skill Selection Loadout UI */
+.menu-desc {
+    color: #94a3b8;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+.skill-selection-grid {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 760px;
+    margin: 4px 0 10px 0;
+}
+
+.skill-card {
+    position: relative;
+    background: rgba(30, 41, 59, 0.9);
+    border: 2px solid #334155;
+    border-radius: 8px;
+    padding: 10px 12px;
+    width: 138px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.skill-card:hover {
+    transform: translateY(-2px);
+    border-color: #64748b;
+    background: rgba(51, 65, 85, 0.95);
+}
+
+.skill-card.selected {
+    border-color: #38bdf8;
+    background: rgba(8, 51, 68, 0.85);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.45);
+}
+
+.skill-slot-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: #475569;
+    color: #cbd5e1;
+    margin-bottom: 4px;
+}
+
+.skill-card.selected .skill-slot-tag {
+    background-color: #0284c7;
+    color: #ffffff;
+}
+
+.skill-card-icon {
+    font-size: 26px;
+    margin-bottom: 4px;
+}
+
+.skill-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 3px;
+}
+
+.skill-card-desc {
+    font-size: 10px;
+    color: #94a3b8;
+    line-height: 1.3;
+}
+
+.skill-selection-summary {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: #e2e8f0;
+    margin-bottom: 4px;
+}
