@@ -52,12 +52,21 @@ class Skill4 extends BaseSkill {
 
         this.domElement = document.createElement("div");
         this.domElement.className = "skill4-beam-fx";
-        this.domElement.innerHTML = `
-            <div class="beam-outer-aura"></div>
-            <div class="beam-core-glow"></div>
-            <div class="beam-white-laser"></div>
-            <div class="beam-muzzle-flash"></div>
-        `;
+
+        // Konstruksi layer DOM secara eksplisit dan aman dari injeksi script
+        const outerAura = document.createElement("div");
+        outerAura.className = "beam-outer-aura";
+
+        const coreGlow = document.createElement("div");
+        coreGlow.className = "beam-core-glow";
+
+        const whiteLaser = document.createElement("div");
+        whiteLaser.className = "beam-white-laser";
+
+        const muzzleFlash = document.createElement("div");
+        muzzleFlash.className = "beam-muzzle-flash";
+
+        this.domElement.append(outerAura, coreGlow, whiteLaser, muzzleFlash);
         container.appendChild(this.domElement);
         this.syncDOMPosition();
     }

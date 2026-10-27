@@ -318,10 +318,22 @@ class GameManager {
                 sound = new Audio(fallbackSrc);
             }
             sound.volume = volume;
+
+            // Bersihkan instance audio saat pemutaran selesai untuk mencegah kebocoran memori (memory leak)
+            const cleanup = () => {
+                sound.removeEventListener("ended", cleanup);
+                sound.removeEventListener("error", cleanup);
+                sound.pause();
+                sound.src = "";
+            };
+            sound.addEventListener("ended", cleanup, { once: true });
+            sound.addEventListener("error", cleanup, { once: true });
+
             const playPromise = sound.play();
             if (playPromise !== undefined) {
                 playPromise.catch(() => {
                     // Browser autoplay policy prevention fallback
+                    cleanup();
                 });
             }
         } catch (e) {
@@ -462,15 +474,21 @@ class GameManager {
             }
         });
 
-        // Perbarui rangkuman teks loadout
+        // Perbarui rangkuman teks loadout (Aman dari risiko XSS / DOM Injection)
         const summaryText = document.getElementById("loadout-summary-text");
         if (summaryText) {
-            const parts = this.loadout.map((id, idx) => {
+            summaryText.replaceChildren();
+            summaryText.appendChild(document.createTextNode("Loadout Aktif: "));
+            this.loadout.forEach((id, idx) => {
+                if (idx > 0) {
+                    summaryText.appendChild(document.createTextNode(" | "));
+                }
                 const def = this.skillDefinitions[id];
                 const name = def ? def.name : id;
-                return `<strong>[${keyLabels[idx]}] ${name}</strong>`;
+                const strong = document.createElement("strong");
+                strong.textContent = `[${keyLabels[idx]}] ${name}`;
+                summaryText.appendChild(strong);
             });
-            summaryText.innerHTML = `Loadout Aktif: ${parts.join(" | ")}`;
         }
 
         // Perbarui label nama skill di HUD atas
@@ -562,14 +580,14 @@ class GameManager {
         if (!this.activationCalculator.canActivate(this.player, "skill3")) {
             const cooldownRem = this.activationCalculator.getCooldownRemaining(this.player, "skill3");
             if (cooldownRem > 0) {
-                this.showDangerAlert(`ORBS COOLDOWN (${cooldownRem.toFixed(1)}s)!`);
+                this.showDangerAlert(`Orbiting Orbs masih cooldown (${cooldownRem.toFixed(1)}s)!`);
             }
             return;
         }
 
         // Jika bola orbit sebelumnya masih aktif berputar, cegah casting tumpuk
         if (this.player.activeSkill3 && this.player.activeSkill3.isAlive) {
-            this.showDangerAlert("ORBS SEDANG AKTIF!");
+            this.showDangerAlert("Orbiting Orbs sedang aktif!");
             return;
         }
 
@@ -584,7 +602,7 @@ class GameManager {
         });
 
         this.playSkillCastingSound();
-        this.showHealAlert("ORBITING ORBS AKTIF!");
+        this.showHealAlert("Orbiting Orbs diaktifkan!");
         this.updateSkillsCooldownHUD();
     }
 
@@ -597,10 +615,10 @@ class GameManager {
             const cooldownRem = this.activationCalculator.getCooldownRemaining(this.player, "skill4");
 
             if (cooldownRem > 0) {
-                this.showDangerAlert(`BEAM COOLDOWN (${cooldownRem.toFixed(1)}s)!`);
+                this.showDangerAlert(`Continuous Beam masih cooldown (${cooldownRem.toFixed(1)}s)!`);
             } else if (!progress.isMet) {
                 const needed = progress.required - progress.current;
-                this.showDangerAlert(`BEAM BUTUH ${needed} KILL LAGI (${progress.current}/${progress.required})!`);
+                this.showDangerAlert(`Continuous Beam butuh ${needed} kill lagi (${progress.current}/${progress.required})!`);
             }
             return;
         }
@@ -625,7 +643,7 @@ class GameManager {
         if (!this.activationCalculator.canActivate(this.player, "skill5")) {
             const cooldownRem = this.activationCalculator.getCooldownRemaining(this.player, "skill5");
             if (cooldownRem > 0) {
-                this.showDangerAlert(`SHIELD COOLDOWN (${cooldownRem.toFixed(1)}s)!`);
+                this.showDangerAlert(`Hex Shield masih cooldown (${cooldownRem.toFixed(1)}s)!`);
             }
             return;
         }
@@ -637,9 +655,9 @@ class GameManager {
                 this.player.shield.addStack(1);
                 this.activationCalculator.consumeActivation(this.player, "skill5");
                 this.playSkillCastingSound();
-                this.showHealAlert("HEX SHIELD BERTAMBAH (+1 STACK)!");
+                this.showHealAlert("Hex Shield bertambah (+1 stack)!");
             } else {
-                this.showDangerAlert("SHIELD SUDAH MAKSIMAL (2/2)!");
+                this.showDangerAlert("Hex Shield sudah maksimal (2/2)!");
                 return;
             }
         } else {
@@ -647,7 +665,7 @@ class GameManager {
             new Skill5(this.player, { stacks: 1, maxStacks: 2 });
             this.activationCalculator.consumeActivation(this.player, "skill5");
             this.playSkillCastingSound();
-            this.showHealAlert("HEX SHIELD DIAKTIFKAN!");
+            this.showHealAlert("Hex Shield diaktifkan!");
         }
 
         this.updateSkillsCooldownHUD();
@@ -755,13 +773,13 @@ class GameManager {
     handleTimerComplete() {
         if (this.gameState === "PLAYING") {
             this.gameState = "LOST";
-            this.endGame("GAME OVER - WAKTU HABIS!", "lose");
+            this.endGame("Game Over - Waktu Habis!", "lose");
         }
     }
 
     registerEvents() {
         window.addEventListener("keydown", (event) => {
-            if (this.keys.hasOwnProperty(event.code)) {
+            if (Object.prototype.hasOwnProperty.call(this.keys, event.code)) {
                 this.keys[event.code] = true;
                 if (event.code.startsWith("Arrow")) {
                     event.preventDefault();
@@ -791,36 +809,65 @@ class GameManager {
         });
 
         window.addEventListener("keyup", (event) => {
-            if (this.keys.hasOwnProperty(event.code)) {
+            if (Object.prototype.hasOwnProperty.call(this.keys, event.code)) {
                 this.keys[event.code] = false;
             }
         });
 
         if (this.coinColorPicker) {
             this.coinColorPicker.addEventListener("input", (event) => {
-                this.coinColor = event.target.value;
+                const val = event.target.value;
+                // Validasi format kode warna heksadesimal 6-digit yang aman
+                if (typeof val === "string" && /^#[0-9a-fA-F]{6}$/.test(val)) {
+                    this.coinColor = val;
+                }
             });
         }
 
         if (this.coinSizeSlider) {
             this.coinSizeSlider.addEventListener("input", (event) => {
-                this.coinRadius = parseInt(event.target.value, 10);
-                if (this.coinSizeValue) {
-                    this.coinSizeValue.textContent = `${this.coinRadius}px`;
+                const parsed = parseInt(event.target.value, 10);
+                if (!Number.isNaN(parsed)) {
+                    // Batasi ukuran radius koin dalam rentang aman [6px - 22px]
+                    this.coinRadius = Math.min(22, Math.max(6, parsed));
+                    if (this.coinSizeValue) {
+                        this.coinSizeValue.textContent = `${this.coinRadius}px`;
+                    }
                 }
             });
         }
 
         if (this.bgUploadInput) {
             this.bgUploadInput.addEventListener("change", (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        this.backgroundImage.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
+                const file = event.target.files && event.target.files[0];
+                if (!file) return;
+
+                // Batasi berkas maksimal 5MB dan hanya izinkan raster image murni (mencegah SVG XSS injection)
+                const allowedTypes = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+                const maxSizeBytes = 5 * 1024 * 1024;
+
+                if (!allowedTypes.includes(file.type)) {
+                    this.showDangerAlert("Format gambar tidak didukung! Gunakan PNG/JPG/WebP/GIF.");
+                    event.target.value = "";
+                    return;
                 }
+
+                if (file.size > maxSizeBytes) {
+                    this.showDangerAlert("Ukuran gambar terlalu besar! Maksimal 5MB.");
+                    event.target.value = "";
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (typeof e.target.result === "string" && e.target.result.startsWith("data:image/")) {
+                        this.backgroundImage.src = e.target.result;
+                    }
+                };
+                reader.onerror = () => {
+                    this.showDangerAlert("Gagal memuat berkas gambar latar belakang!");
+                };
+                reader.readAsDataURL(file);
             });
         }
 
@@ -877,7 +924,7 @@ class GameManager {
         );
     }
 
-    showDangerAlert(message = "DANGER!") {
+    showDangerAlert(message = "Bahaya!") {
         if (!this.dangerAlert) return;
         this.dangerAlert.textContent = message;
         this.dangerAlert.classList.add("active");
@@ -894,7 +941,7 @@ class GameManager {
         }, 1200);
     }
 
-    showHealAlert(message = "+1 HP HEALED!") {
+    showHealAlert(message = "+1 HP Pulih!") {
         if (!this.healAlert) return;
         this.healAlert.textContent = message;
         this.healAlert.classList.add("active");
@@ -929,7 +976,7 @@ class GameManager {
         const nextCoins = Math.max(3, Math.round((nextTarget - nextSpikePoints) / this.coinValue));
 
         if (this.stageClearTitle) {
-            this.stageClearTitle.textContent = `STAGE ${this.stage} CLEARED! 🎉`;
+            this.stageClearTitle.textContent = `Stage ${this.stage} Cleared! 🎉`;
         }
         if (this.stageClearDesc) {
             this.stageClearDesc.textContent = `Target ${this.targetScore} poin berhasil dicapai!`;
@@ -1001,7 +1048,7 @@ class GameManager {
         // Skill player masuk masa cooldown saat stage baru dimulai
         this.triggerInitialSkillsCooldown();
 
-        this.showHealAlert(`🚀 STAGE ${this.stage} DIMULAI!`);
+        this.showHealAlert(`Stage ${this.stage} Dimulai!`);
     }
 
     endGame(message, cssClass) {
@@ -1264,7 +1311,7 @@ class GameManager {
                                 this.createSpikeExplosion(orbCenterX, orbCenterY);
                                 orb.destroy();
                                 const remStacks = (this.player.shield && this.player.shield.isAlive) ? this.player.shield.stacks : 0;
-                                this.showDangerAlert(`🛡️ SERANGAN DISERAP PERISAI! (${remStacks} Stack Tersisa)`);
+                                this.showDangerAlert(`🛡️ Serangan diserap perisai! (${remStacks} stack tersisa)`);
                                 this.updateSkillsCooldownHUD();
                             } else if (dmgResult === true) {
                                 // Serangan menembus dan mengurangi nyawa (HP) Player
@@ -1279,7 +1326,7 @@ class GameManager {
                                     this.player.respawn();
                                     this.gameState = "LOST";
                                     this.timer.pause();
-                                    this.endGame("GAME OVER - HABIS NYAWA!", "lose");
+                                    this.endGame("Game Over - Habis Nyawa!", "lose");
                                 }
                             }
                         }
@@ -1384,7 +1431,7 @@ class GameManager {
                     this.player.heal(1);
                     this.playHealSound();
                     this.updateHpDisplay();
-                    this.showHealAlert("+1 HP HEALED!");
+                    this.showHealAlert("+1 HP Pulih!");
                     // Potion dikonsumsi dan tidak akan muncul lagi selama stage ini
                     this.potions.splice(i, 1);
                 } else {
@@ -1392,7 +1439,7 @@ class GameManager {
                     const now = Date.now();
                     if (!this.lastFullHpAlert || now - this.lastFullHpAlert > 1500) {
                         this.lastFullHpAlert = now;
-                        this.showHealAlert("HP SUDAH PENUH (3/3)!");
+                        this.showHealAlert("HP sudah penuh (3/3)!");
                     }
                 }
             }
@@ -1412,7 +1459,7 @@ class GameManager {
                         this.player.applyKnockback(enemyCenterX, enemyCenterY, 14);
                         this.createSpikeExplosion(enemyCenterX, enemyCenterY);
                         const remStacks = (this.player.shield && this.player.shield.isAlive) ? this.player.shield.stacks : 0;
-                        this.showDangerAlert(`🛡️ SERANGAN DISERAP PERISAI! (${remStacks} Stack Tersisa)`);
+                        this.showDangerAlert(`🛡️ Serangan diserap perisai! (${remStacks} stack tersisa)`);
                         this.updateSkillsCooldownHUD();
                     } else if (dmgResult === true) {
                         // Serangan masuk dan mengurangi nyawa (HP) Player
@@ -1433,7 +1480,7 @@ class GameManager {
                             this.player.respawn();
                             this.gameState = "LOST";
                             this.timer.pause();
-                            this.endGame("GAME OVER - HABIS NYAWA!", "lose");
+                            this.endGame("Game Over - Habis Nyawa!", "lose");
                         }
                     }
                 }

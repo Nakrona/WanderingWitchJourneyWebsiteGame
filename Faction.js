@@ -4,12 +4,6 @@
  * Faksi A: Player dan skill milik player.
  * Faksi B: Musuh (Enemy Type 1 & Enemy Type 2) dan skill milik musuh (Skill 3).
  */
-/**
- * Faction.js
- * Sistem Faksi untuk membedakan kubu karakter dan proyektil (SRP & SOLID).
- * Faksi A: Player dan skill milik player.
- * Faksi B: Musuh (Enemy Type 1 & Enemy Type 2) dan skill milik musuh (Skill 3).
- */
 const Faction = {
     A: 'FACTION_A',
     B: 'FACTION_B',

@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WanderingWitchJourney</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="no-referrer">
+    <title>Wandering Witch Journey</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,7 +19,7 @@
 
         <!-- Header with Game Title, Stats, and HUD Restart Button -->
         <header class="game-header">
-            <h1>WanderingWitchJourney</h1>
+            <h1>Wandering Witch Journey</h1>
             <div class="stats-panel">
                 <div class="stat-item">
                     <span>Stage: </span>
@@ -67,7 +70,7 @@
 
             <!-- Main Menu Overlay with Skill Loadout Selection -->
             <div id="main-menu-overlay" class="game-overlay">
-                <h2>WanderingWitchJourney</h2>
+                <h2>Wandering Witch Journey</h2>
                 <p class="menu-desc">Pilih 3 Skill yang akan kamu bawa ke dalam pertempuran (Slot Z, X, C):</p>
 
                 <div class="skill-selection-grid" id="skill-selection-grid">
@@ -75,31 +78,31 @@
                         <div class="skill-slot-tag">Slot [Z]</div>
                         <div class="skill-card-icon">❄️</div>
                         <div class="skill-card-title">Skill 1: Frost Bolt</div>
-                        <div class="skill-card-desc">Peluru energi es menusuk lurus. CD: 1.5s</div>
+                        <div class="skill-card-desc">Peluru energi es menusuk lurus. Cooldown: 1.5 detik</div>
                     </div>
                     <div class="skill-card selected" data-skill-id="skill2" data-slot="X">
                         <div class="skill-slot-tag">Slot [X]</div>
                         <div class="skill-card-icon">🔥</div>
                         <div class="skill-card-title">Skill 2: Flame Plasma</div>
-                        <div class="skill-card-desc">Plasma api cepat berdaya hancur tinggi. CD: 2.5s</div>
+                        <div class="skill-card-desc">Plasma api cepat berdaya ledak tinggi. Cooldown: 2.5 detik</div>
                     </div>
                     <div class="skill-card" data-skill-id="skill3">
                         <div class="skill-slot-tag">Pilih</div>
                         <div class="skill-card-icon">🌀</div>
                         <div class="skill-card-title">Skill 3: Orbiting Orbs</div>
-                        <div class="skill-card-desc">4 bola es &amp; api melingkari tubuh selama 7 detik. CD: 9s</div>
+                        <div class="skill-card-desc">4 bola es dan api melingkari tubuh selama 7 detik. Cooldown: 9 detik</div>
                     </div>
                     <div class="skill-card" data-skill-id="skill4">
                         <div class="skill-slot-tag">Pilih</div>
                         <div class="skill-card-icon">⚡</div>
                         <div class="skill-card-title">Skill 4: Continuous Beam</div>
-                        <div class="skill-card-desc">Laser 2s menembus musuh. Syarat: 3 Kill &amp; CD: 7s</div>
+                        <div class="skill-card-desc">Laser 2 detik menembus musuh. Syarat: 3 kill, Cooldown: 7 detik</div>
                     </div>
                     <div class="skill-card selected" data-skill-id="skill5" data-slot="C">
                         <div class="skill-slot-tag">Slot [C]</div>
                         <div class="skill-card-icon">🛡️</div>
                         <div class="skill-card-title">Skill 5: Hex Shield</div>
-                        <div class="skill-card-desc">Perisai heksagon, stack hingga 2X menahan damage. CD: 5s</div>
+                        <div class="skill-card-desc">Perisai heksagon, akumulasi hingga 2 stack penahan damage. Cooldown: 5 detik</div>
                     </div>
                 </div>
 
@@ -112,7 +115,7 @@
 
             <!-- Stage Clear Overlay -->
             <div id="stage-clear-overlay" class="game-overlay hidden">
-                <h2 class="win" id="stage-clear-title">STAGE 1 CLEARED! 🎉</h2>
+                <h2 class="win" id="stage-clear-title">Stage 1 Cleared!</h2>
                 <p id="stage-clear-desc" class="overlay-desc">Target 100 poin tercapai!</p>
                 <div class="stage-info-box">
                     <p>Stage Berikutnya: <strong id="next-stage-name" style="color: #38bdf8;">Stage 2</strong></p>
@@ -125,7 +128,7 @@
 
             <!-- Win/Lose Overlay -->
             <div id="game-status-overlay" class="game-overlay hidden">
-                <h2 id="game-status-message">GAME OVER</h2>
+                <h2 id="game-status-message">Game Over</h2>
                 <p id="game-over-desc" class="overlay-desc">Kamu mencapai Stage 1</p>
                 <div class="game-over-btn-group">
                     <button id="return-menu-btn" class="overlay-btn secondary-btn">Pilih Ulang Skill</button>
@@ -148,7 +151,7 @@
 
             <div class="control-row">
                 <label for="bg-upload">Background Image:</label>
-                <input type="file" id="bg-upload" accept="image/*">
+                <input type="file" id="bg-upload" accept="image/png,image/jpeg,image/webp,image/gif">
             </div>
 
             <p class="controls-hint">Controls: Gerak dengan <strong>WASD / Tombol Panah</strong>. Tembak: <strong>Z</strong>, <strong>X</strong>, dan <strong>C</strong> sesuai 3 Skill yang kamu pilih di Main Menu (Skill 1 s/d Skill 5: Frost Bolt, Flame Plasma, Orbiting Orbs, Continuous Beam, Hex Shield). <strong>Sistem Faksi:</strong> Player (Faksi A) vs Musuh (Faksi B). Musuh Jenis 1 (1 HP, 10 pts) &amp; Musuh Jenis 2 (2 HP, 20 pts, Skill 3). Skill tidak melukai sesama rekan!</p>
