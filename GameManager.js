@@ -210,6 +210,16 @@ class GameManager {
         ];
     }
 
+    /**
+     * Menghitung rate spawn kemunculan musuh EnemyType 2 berdasarkan stage saat ini.
+     * Rate dimulai dari 20% (0.20) pada Stage 1 dan meningkat bertahap (+4% per stage) hingga batas maksimal 50% (0.50).
+     * Otomatis ter-reset kembali ke nilai awal 20% setiap kali Game Over atau Restart ke Stage 1.
+     * @returns {number}
+     */
+    getType2SpawnRate() {
+        return Math.min(0.50, 0.20 + (this.stage - 1) * 0.04);
+    }
+
     generateSafeEnemy() {
         const padding = 70;
         const width = 42;
@@ -258,7 +268,8 @@ class GameManager {
         
         // Peluang spawn Type 2 naik tipis-tipis (+4% per stage, dari base 20% hingga cap 50%):
         // Stage 1 = 20%, Stage 2 = 24%, Stage 3 = 28%, Stage 4 = 32%, Stage 5 = 36%, Stage 6 = 40%, dst. (maks 50%)
-        const type2SpawnRate = Math.min(0.50, 0.20 + (this.stage - 1) * 0.04);
+        // Otomatis ter-reset kembali ke 20% saat game di-restart ke Stage 1
+        const type2SpawnRate = this.getType2SpawnRate();
 
         // Batas maksimal musuh Type 2 aktif bersamaan di layar meningkat secara berimbang:
         // Stage 1-2: maks 1 | Stage 3-4: maks 2 | Stage 5+: maks 3
@@ -1067,10 +1078,13 @@ class GameManager {
 
     /**
      * Helper DRY untuk mereset seluruh entitas, proyektil, kalkulator, dan lingkungan stage.
+     * Mengembalikan Stage ke 1, mereset target skor, kuota musuh, dan mengembalikan rate spawn
+     * EnemyType 2 ke nilai dasar awal (20%).
      */
     resetStageAndEntities() {
         this.stage = 1;
         this.calculateStageSpawn();
+        this.type2EnemiesSpawnedInStage = 0;
         this.stageScore = 0;
         this.totalScore = 0;
 
