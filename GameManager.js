@@ -64,9 +64,6 @@ class GameManager {
         this.coins = [];
 
         // Customization
-        this.coinColorPicker = document.getElementById("coin-color-picker");
-        this.coinSizeSlider = document.getElementById("coin-size-slider");
-        this.coinSizeValue = document.getElementById("coin-size-value");
         this.bgUploadInput = document.getElementById("bg-upload");
 
         // Overlays
@@ -136,8 +133,8 @@ class GameManager {
             () => this.handleTimerComplete()
         );
 
-        this.coinColor = this.coinColorPicker ? this.coinColorPicker.value : "#facc15";
-        this.coinRadius = this.coinSizeSlider ? parseInt(this.coinSizeSlider.value, 10) : 12;
+        this.coinColor = "#facc15";
+        this.coinRadius = 12;
         this.keys = {
             ArrowUp: false,
             ArrowDown: false,
@@ -824,29 +821,6 @@ class GameManager {
                 this.keys[event.code] = false;
             }
         });
-
-        if (this.coinColorPicker) {
-            this.coinColorPicker.addEventListener("input", (event) => {
-                const val = event.target.value;
-                // Validasi format kode warna heksadesimal 6-digit yang aman
-                if (typeof val === "string" && /^#[0-9a-fA-F]{6}$/.test(val)) {
-                    this.coinColor = val;
-                }
-            });
-        }
-
-        if (this.coinSizeSlider) {
-            this.coinSizeSlider.addEventListener("input", (event) => {
-                const parsed = parseInt(event.target.value, 10);
-                if (!Number.isNaN(parsed)) {
-                    // Batasi ukuran radius koin dalam rentang aman [6px - 22px]
-                    this.coinRadius = Math.min(22, Math.max(6, parsed));
-                    if (this.coinSizeValue) {
-                        this.coinSizeValue.textContent = `${this.coinRadius}px`;
-                    }
-                }
-            });
-        }
 
         if (this.bgUploadInput) {
             this.bgUploadInput.addEventListener("change", (event) => {
