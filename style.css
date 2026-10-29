@@ -119,6 +119,27 @@ body {
     transform: translateY(0);
 }
 
+.bgm-btn {
+    background-color: #8b5cf6;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+    min-width: 86px;
+    text-align: center;
+}
+
+.bgm-btn:hover {
+    background-color: #7c3aed;
+}
+
+.bgm-btn.muted {
+    background-color: #475569;
+    box-shadow: 0 2px 8px rgba(71, 85, 105, 0.3);
+    color: #cbd5e1;
+}
+
+.bgm-btn.muted:hover {
+    background-color: #334155;
+}
+
 /* HP Display */
 .hp-display {
     color: #f43f5e;

@@ -85,6 +85,7 @@ class GameManager {
         this.restartBtn = document.getElementById("restart-btn");
         this.returnMenuBtn = document.getElementById("return-menu-btn");
         this.headerRestartBtn = document.getElementById("header-restart-btn");
+        this.bgmToggleBtn = document.getElementById("bgm-toggle-btn");
 
         this.mainMenuOverlay = document.getElementById("main-menu-overlay");
         this.playBtn = document.getElementById("play-btn");
@@ -112,7 +113,12 @@ class GameManager {
         };
         this.backgroundImage.src = "Background.png";
 
-        // Sound Effects (SFX) Setup
+        // Background Music (BGM) & Sound Effects (SFX) Setup
+        this.bgmAudio = document.getElementById("bgm-audio") || new Audio("BGM_LonelyWitch.mp3");
+        this.bgmAudio.loop = true;
+        this.bgmAudio.volume = 0.45;
+        this.isBgmMuted = false;
+
         this.sfxSkillCast = document.getElementById("sfx-skill-cast") || new Audio("SkillCasting.mp3");
         this.sfxHit = document.getElementById("sfx-hit") || new Audio("Hit.mp3");
         this.sfxWin = document.getElementById("sfx-win") || new Audio("win.mp3");
@@ -127,11 +133,14 @@ class GameManager {
 
         // Unlock audio on initial user interaction to conform with browser autoplay policies
         const unlockAudio = () => {
-            [this.sfxSkillCast, this.sfxHit, this.sfxWin, this.sfxLose, this.sfxHeal].forEach((sfx) => {
+            [this.bgmAudio, this.sfxSkillCast, this.sfxHit, this.sfxWin, this.sfxLose, this.sfxHeal].forEach((sfx) => {
                 if (sfx && typeof sfx.load === "function") {
                     sfx.load();
                 }
             });
+            if (this.gameState === "PLAYING" && !this.isBgmMuted) {
+                this.playBGM();
+            }
             window.removeEventListener("keydown", unlockAudio);
             window.removeEventListener("click", unlockAudio);
         };
@@ -241,6 +250,7 @@ class GameManager {
         ];
 
         const audioFiles = [
+            "BGM_LonelyWitch.mp3",
             "SkillCasting.mp3",
             "Hit.mp3",
             "win.mp3",
@@ -526,6 +536,43 @@ class GameManager {
         this.playSound(this.sfxHeal, "heal.mp3", 0.7);
     }
 
+    playBGM() {
+        if (!this.bgmAudio || this.isBgmMuted) return;
+        try {
+            this.bgmAudio.volume = 0.45;
+            const playPromise = this.bgmAudio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => {});
+            }
+        } catch (e) {}
+    }
+
+    pauseBGM() {
+        if (!this.bgmAudio) return;
+        try {
+            this.bgmAudio.pause();
+        } catch (e) {}
+    }
+
+    toggleBGM() {
+        this.isBgmMuted = !this.isBgmMuted;
+        if (this.isBgmMuted) {
+            this.pauseBGM();
+            if (this.bgmToggleBtn) {
+                this.bgmToggleBtn.textContent = "Musik: OFF";
+                this.bgmToggleBtn.classList.add("muted");
+            }
+        } else {
+            if (this.bgmToggleBtn) {
+                this.bgmToggleBtn.textContent = "Musik: ON";
+                this.bgmToggleBtn.classList.remove("muted");
+            }
+            if (this.gameState === "PLAYING") {
+                this.playBGM();
+            }
+        }
+    }
+
     startGame() {
         if (this.gameState !== "MENU") {
             // Jika dipanggil saat LOADING (misal dari headless test suite)
@@ -543,6 +590,7 @@ class GameManager {
             this.mainMenuOverlay.classList.add("hidden");
         }
         this.timer.start();
+        this.playBGM();
         // Ketika game dimulai, seluruh skill player langsung masuk masa cooldown awal
         this.triggerInitialSkillsCooldown();
     }
@@ -1015,6 +1063,13 @@ class GameManager {
             });
         }
 
+        // BGM Toggle Button (Mute / Unmute Musik Latar)
+        if (this.bgmToggleBtn) {
+            this.bgmToggleBtn.addEventListener("click", () => {
+                this.toggleBGM();
+            });
+        }
+
         // Next Stage Button
         if (this.nextStageBtn) {
             this.nextStageBtn.addEventListener("click", () => {
@@ -1083,6 +1138,7 @@ class GameManager {
     handleStageComplete() {
         this.gameState = "STAGE_CLEARED";
         this.timer.pause();
+        this.pauseBGM();
         this.playWinSound();
 
         const nextStageNum = this.stage + 1;
@@ -1165,6 +1221,7 @@ class GameManager {
         const stageDuration = Math.min(95, Math.round(55 + this.stage * 5));
         this.timer.reset(stageDuration);
         this.timer.start();
+        this.playBGM();
 
         // Skill player masuk masa cooldown saat stage baru dimulai
         this.triggerInitialSkillsCooldown();
@@ -1173,6 +1230,7 @@ class GameManager {
     }
 
     endGame(message, cssClass) {
+        this.pauseBGM();
         if (cssClass === "lose") {
             this.playLoseSound();
         }
@@ -1258,6 +1316,7 @@ class GameManager {
         }
 
         this.timer.start();
+        this.playBGM();
         // Ketika game di-restart, seluruh skill player langsung masuk masa cooldown
         this.triggerInitialSkillsCooldown();
     }
