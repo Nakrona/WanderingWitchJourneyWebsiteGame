@@ -232,26 +232,6 @@ class GameManager {
             finishLoading();
         }, 2500);
 
-        // Tahap 1: Muat player.gif pertama kali sebagai circular loading spinner handler
-        updateUI(5, "Memuat handler animasi player (player.gif)...");
-        const playerImg = new Image();
-
-        const onPlayerReady = () => {
-            if (spinnerGif) {
-                spinnerGif.src = "player.gif";
-                spinnerGif.style.opacity = "1";
-            }
-            updateUI(15, "player.gif siap. Memuat aset lainnya...");
-            preloadRemainingAssets();
-        };
-
-        playerImg.onload = onPlayerReady;
-        playerImg.onerror = onPlayerReady;
-        playerImg.src = "player.gif";
-        if (playerImg.complete && playerImg.naturalWidth > 0) {
-            onPlayerReady();
-        }
-
         const remainingImages = [
             "Background.png",
             "enemy.png",
@@ -268,8 +248,11 @@ class GameManager {
             "heal.mp3"
         ];
 
-        const self = this;
-        function preloadRemainingAssets() {
+        let preloadRemainingStarted = false;
+        const preloadRemainingAssets = () => {
+            if (preloadRemainingStarted) return;
+            preloadRemainingStarted = true;
+
             const total = remainingImages.length + audioFiles.length;
             let loaded = 0;
 
@@ -310,6 +293,29 @@ class GameManager {
                 // Audio timeout fallback for browser restrictions
                 setTimeout(onAudioDone, 400);
             });
+        };
+
+        // Tahap 1: Muat player.gif pertama kali sebagai circular loading spinner handler
+        updateUI(5, "Memuat handler animasi player (player.gif)...");
+        const playerImg = new Image();
+
+        let playerHandled = false;
+        const onPlayerReady = () => {
+            if (playerHandled) return;
+            playerHandled = true;
+            if (spinnerGif) {
+                spinnerGif.src = "player.gif";
+                spinnerGif.style.opacity = "1";
+            }
+            updateUI(15, "player.gif siap. Memuat aset lainnya...");
+            preloadRemainingAssets();
+        };
+
+        playerImg.onload = onPlayerReady;
+        playerImg.onerror = onPlayerReady;
+        playerImg.src = "player.gif";
+        if (playerImg.complete && playerImg.naturalWidth > 0) {
+            onPlayerReady();
         }
     }
 
