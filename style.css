@@ -345,68 +345,126 @@ body {
     transform: translateY(0) scale(0.98);
 }
 
-/* Customization Panel */
-.control-panel {
+/* Loading Overlay Styling (Preloader) */
+#loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    margin-top: 15px;
-    padding: 12px 16px;
-    background-color: #182234;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 1));
+    z-index: 35;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     border-radius: 8px;
-    border: 1px solid #2d3b55;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 
-.control-panel h3 {
-    font-size: 14px;
-    margin-bottom: 8px;
-    color: #38bdf8;
-    text-transform: uppercase;
+#loading-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
 }
 
-.control-row {
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 380px;
+    max-width: 90%;
+}
+
+.loading-spinner-circle {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    border: 3px solid #38bdf8;
+    box-shadow: 0 0 25px rgba(56, 189, 248, 0.5), inset 0 0 15px rgba(56, 189, 248, 0.3);
+    overflow: hidden;
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    font-size: 14px;
-    margin-bottom: 10px;
+    justify-content: center;
+    background: rgba(30, 41, 59, 0.85);
+    margin-bottom: 16px;
+    animation: loading-pulse 1.8s infinite ease-in-out;
 }
 
-.control-row input[type="color"] {
-    border: none;
-    width: 36px;
-    height: 30px;
-    cursor: pointer;
-    border-radius: 4px;
-    background: transparent;
+.loading-spinner-circle img {
+    width: 54px;
+    height: 54px;
+    object-fit: contain;
 }
 
-.control-row input[type="range"] {
-    cursor: pointer;
+@keyframes loading-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        border-color: #38bdf8;
+    }
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 0 35px rgba(129, 140, 248, 0.7);
+        border-color: #818cf8;
+    }
 }
 
-.control-row input[type="file"] {
-    color: #94a3b8;
-    font-size: 13px;
-}
-
-.control-row input[type="file"]::file-selector-button {
-    padding: 6px 12px;
-    border-radius: 6px;
-    border: 1px solid #334155;
-    background-color: #0f172a;
+.loading-title {
+    font-size: 22px !important;
     color: #e2e8f0;
-    cursor: pointer;
-    margin-right: 8px;
-    transition: background-color 0.2s ease;
+    margin-bottom: 4px !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase;
+    text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
 }
 
-.control-row input[type="file"]::file-selector-button:hover {
-    background-color: #334155;
-}
-
-.controls-hint {
+.loading-subtitle {
     font-size: 13px;
     color: #94a3b8;
+    margin-bottom: 22px;
+}
+
+.loading-bar-wrapper {
+    width: 100%;
+    height: 12px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 8px;
+}
+
+.loading-bar-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #60a5fa, #a855f7);
+    border-radius: 8px;
+    transition: width 0.25s ease;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+
+.loading-status-row {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #64748b;
+    font-family: monospace;
+}
+
+#loading-percentage {
+    color: #38bdf8;
+    font-weight: 700;
+}
+
+/* Soul Blue Sprite */
+.soul-sprite {
+    position: absolute;
+    pointer-events: none;
+    z-index: 4;
+    transition: transform 0.05s linear;
 }
 
 /* Skills Cooldown HUD */

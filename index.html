@@ -68,8 +68,26 @@
             <!-- Player GIF Image Element -->
             <img id="player-gif" src="player.gif" alt="Player Character">
 
+            <!-- Loading Panel Overlay (Memastikan Semua Aset Termuat Sempurna) -->
+            <div id="loading-overlay" class="game-overlay">
+                <div class="loading-content">
+                    <div class="loading-spinner-circle">
+                        <img id="loading-spinner-gif" src="player.gif" alt="Loading...">
+                    </div>
+                    <h2 class="loading-title">Wandering Witch Journey</h2>
+                    <p class="loading-subtitle">Memuat aset permainan...</p>
+                    <div class="loading-bar-wrapper">
+                        <div id="loading-bar-fill" class="loading-bar-fill"></div>
+                    </div>
+                    <div class="loading-status-row">
+                        <span id="loading-status-text">Menginisialisasi...</span>
+                        <span id="loading-percentage">0%</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Main Menu Overlay with Skill Loadout Selection -->
-            <div id="main-menu-overlay" class="game-overlay">
+            <div id="main-menu-overlay" class="game-overlay hidden">
                 <h2>Wandering Witch Journey</h2>
                 <p class="menu-desc">Pilih 3 Skill yang akan kamu bawa ke dalam pertempuran (Slot Z, X, C):</p>
 
@@ -120,7 +138,7 @@
                 <div class="stage-info-box">
                     <p>Stage Berikutnya: <strong id="next-stage-name" style="color: #38bdf8;">Stage 2</strong></p>
                     <p>Target Skor: <strong id="next-stage-target" style="color: #facc15;">120 Poin</strong></p>
-                    <p>Komposisi Spawn: <strong id="next-stage-spikes" style="color: #ef4444;">5 Enemy + 7 Koin</strong></p>
+                    <p>Komposisi Spawn: <strong id="next-stage-spikes" style="color: #ef4444;">5 Enemy + 7 Soul</strong></p>
                     <p>Bonus Clear: <strong style="color: #4ade80;">+1 HP Restored!</strong></p>
                 </div>
                 <button id="next-stage-btn" class="header-btn" style="padding: 12px 28px; font-size: 16px;">Lanjut ke Stage Berikutnya (Enter / Space) ➔</button>
@@ -135,17 +153,6 @@
                     <button id="restart-btn" class="overlay-btn primary-btn">Restart Game</button>
                 </div>
             </div>
-        </div>
-
-        <!-- Customization and Control Panel -->
-        <div class="control-panel">
-            <h3>Customization &amp; Controls</h3>
-            <div class="control-row">
-                <label for="bg-upload">Background Image:</label>
-                <input type="file" id="bg-upload" accept="image/png,image/jpeg,image/webp,image/gif">
-            </div>
-
-            <p class="controls-hint">Controls: Gerak dengan <strong>WASD / Tombol Panah</strong>. Tembak: <strong>Z</strong>, <strong>X</strong>, dan <strong>C</strong> sesuai 3 Skill yang kamu pilih di Main Menu (Skill 1 s/d Skill 5: Frost Bolt, Flame Plasma, Orbiting Orbs, Continuous Beam, Hex Shield). <strong>Sistem Faksi:</strong> Player (Faksi A) vs Musuh (Faksi B). Musuh Jenis 1 (1 HP, 10 pts) &amp; Musuh Jenis 2 (2 HP, 10 pts, Skill 3). Skill tidak melukai sesama rekan!</p>
         </div>
     </div>
 
@@ -168,6 +175,7 @@
     <script src="Enemy.js"></script>
     <script src="EnemyType2.js"></script>
     <script src="Spike.js"></script>
+    <script src="Soul.js"></script>
     <script src="Coin.js"></script>
     <script src="Potion.js"></script>
     <script src="Player.js"></script>

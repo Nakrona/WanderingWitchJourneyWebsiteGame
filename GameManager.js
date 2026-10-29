@@ -3,14 +3,26 @@ class GameManager {
         this.canvas = document.getElementById("gameCanvas");
         this.ctx = this.canvas.getContext("2d");
 
-        // Nilai Poin Elemen Game (10 poin per enemy & 10 poin per koin)
+        // Loading Overlay Elements
+        this.loadingOverlay = document.getElementById("loading-overlay");
+        this.loadingSpinnerGif = document.getElementById("loading-spinner-gif");
+        this.loadingBarFill = document.getElementById("loading-bar-fill");
+        this.loadingStatusText = document.getElementById("loading-status-text");
+        this.loadingPercentage = document.getElementById("loading-percentage");
+
+        this.gameState = "LOADING";
+        this.assetsLoaded = false;
+
+        // Nilai Poin Elemen Game (10 poin per enemy & 10 poin per Soul)
         this.enemyValue = 10; // Setiap 1 Enemy yang dihancurkan bernilai 10 poin
         this.spikeValue = 10; // Alias untuk kompatibilitas
-        this.coinValue = 10;  // Setiap 1 Koin yang diambil bernilai 10 poin
+        this.soulValue = 10;  // Setiap 1 Soul yang diambil bernilai 10 poin
+        this.coinValue = 10;  // Alias untuk kompatibilitas
 
         // Batas Maksimal Objek yang Muncul Bersamaan di Layar
         this.maxActiveSpikes = 5; // Maksimal 5 enemy sekaligus di layar
-        this.maxActiveCoins = 5;  // Maksimal 5 koin sekaligus di layar
+        this.maxActiveSouls = 5;  // Maksimal 5 soul sekaligus di layar
+        this.maxActiveCoins = 5;  // Alias kompatibilitas
 
         // Stage Progression System
         this.stage = 1;
@@ -18,9 +30,11 @@ class GameManager {
 
         // Kuota total stage & sisa antrean yang belum di-spawn
         this.totalSpikesInStage = 0;
-        this.totalCoinsInStage = 0;
+        this.totalSoulsInStage = 0;
+        this.totalCoinsInStage = 0; // Alias kompatibilitas
         this.spikesRemainingToSpawn = 0;
-        this.coinsRemainingToSpawn = 0;
+        this.soulsRemainingToSpawn = 0;
+        this.coinsRemainingToSpawn = 0; // Alias kompatibilitas
 
         this.calculateStageSpawn();
 
@@ -59,12 +73,10 @@ class GameManager {
         this.activeBeams = [];
         this.particles = [];
 
-        // Active enemies (hazards) & coins arrays
+        // Active enemies (hazards) & souls arrays
         this.hazards = [];
-        this.coins = [];
-
-        // Customization
-        this.bgUploadInput = document.getElementById("bg-upload");
+        this.souls = [];
+        this.coins = this.souls; // Alias kompatibilitas
 
         // Overlays
         this.statusOverlay = document.getElementById("game-status-overlay");
@@ -158,9 +170,12 @@ class GameManager {
         // Inisialisasi UI Pemilihan Skill di Main Menu
         this.initSkillSelectionUI();
 
-        // Spawn Enemies and Coins up to the max limit of 5 each
+        // Mulai preloading seluruh aset (player.gif dimuat pertama kali)
+        this.loadGameAssets();
+
+        // Spawn Enemies and Souls up to the max limit of 5 each
         this.replenishHazards();
-        this.replenishCoins();
+        this.replenishSouls();
 
         // Inisialisasi Environment Healing Items (Maksimal 2 per stage, bergerak acak)
         this.initStagePotions();
@@ -174,9 +189,134 @@ class GameManager {
         requestAnimationFrame(this.gameLoop);
     }
 
+    /**
+     * Memuat seluruh aset game (gambar, animasi GIF, audio SFX) sebelum membuka Main Menu.
+     * player.gif dimuat pertama kali secara spesifik untuk penanda loading (circular spinner handler).
+     */
+    loadGameAssets() {
+        this.gameState = "LOADING";
+        const loadingOverlay = this.loadingOverlay || document.getElementById("loading-overlay");
+        const spinnerGif = this.loadingSpinnerGif || document.getElementById("loading-spinner-gif");
+        const barFill = this.loadingBarFill || document.getElementById("loading-bar-fill");
+        const statusText = this.loadingStatusText || document.getElementById("loading-status-text");
+        const percentage = this.loadingPercentage || document.getElementById("loading-percentage");
+
+        const updateUI = (percent, text) => {
+            const clamped = Math.min(100, Math.max(0, Math.round(percent)));
+            if (barFill) barFill.style.width = `${clamped}%`;
+            if (percentage) percentage.textContent = `${clamped}%`;
+            if (statusText) statusText.textContent = text;
+        };
+
+        const finishLoading = () => {
+            if (this.assetsLoaded) return;
+            this.assetsLoaded = true;
+            updateUI(100, "Semua aset siap! Membuka menu...");
+
+            setTimeout(() => {
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add("fade-out");
+                    setTimeout(() => {
+                        loadingOverlay.classList.add("hidden");
+                    }, 350);
+                }
+                if (this.mainMenuOverlay) {
+                    this.mainMenuOverlay.classList.remove("hidden");
+                }
+                this.gameState = "MENU";
+            }, 250);
+        };
+
+        // Safety timeout (2.5 detik) untuk memastikan game tidak terhambat jika audio autoplay dibatasi browser
+        const safetyTimer = setTimeout(() => {
+            finishLoading();
+        }, 2500);
+
+        // Tahap 1: Muat player.gif pertama kali sebagai circular loading spinner handler
+        updateUI(5, "Memuat handler animasi player (player.gif)...");
+        const playerImg = new Image();
+
+        const onPlayerReady = () => {
+            if (spinnerGif) {
+                spinnerGif.src = "player.gif";
+                spinnerGif.style.opacity = "1";
+            }
+            updateUI(15, "player.gif siap. Memuat aset lainnya...");
+            preloadRemainingAssets();
+        };
+
+        playerImg.onload = onPlayerReady;
+        playerImg.onerror = onPlayerReady;
+        playerImg.src = "player.gif";
+        if (playerImg.complete && playerImg.naturalWidth > 0) {
+            onPlayerReady();
+        }
+
+        const remainingImages = [
+            "Background.png",
+            "enemy.png",
+            "SoulBlue.gif",
+            "Skill1.gif",
+            "Skill2.gif"
+        ];
+
+        const audioFiles = [
+            "SkillCasting.mp3",
+            "Hit.mp3",
+            "win.mp3",
+            "lose.mp3",
+            "heal.mp3"
+        ];
+
+        const self = this;
+        function preloadRemainingAssets() {
+            const total = remainingImages.length + audioFiles.length;
+            let loaded = 0;
+
+            const onItemLoaded = (name) => {
+                loaded++;
+                const pct = 15 + (loaded / total) * 85;
+                updateUI(pct, `Memuat: ${name} (${loaded}/${total})`);
+                if (loaded >= total) {
+                    clearTimeout(safetyTimer);
+                    finishLoading();
+                }
+            };
+
+            remainingImages.forEach((src) => {
+                const img = new Image();
+                img.onload = () => onItemLoaded(src);
+                img.onerror = () => onItemLoaded(src);
+                img.src = src;
+                if (img.complete && img.naturalWidth > 0) {
+                    onItemLoaded(src);
+                }
+            });
+
+            audioFiles.forEach((src) => {
+                const audio = new Audio();
+                let finished = false;
+                const onAudioDone = () => {
+                    if (finished) return;
+                    finished = true;
+                    audio.removeEventListener("canplaythrough", onAudioDone);
+                    audio.removeEventListener("error", onAudioDone);
+                    onItemLoaded(src);
+                };
+                audio.addEventListener("canplaythrough", onAudioDone, { once: true });
+                audio.addEventListener("error", onAudioDone, { once: true });
+                audio.src = src;
+                audio.load();
+                // Audio timeout fallback for browser restrictions
+                setTimeout(onAudioDone, 400);
+            });
+        }
+    }
+
     calculateStageSpawn() {
         this.enemyValue = 10;
         this.spikeValue = 10;
+        this.soulValue = 10;
         this.coinValue = 10;
 
         // Stage 1: target 100. Tiap stage naik x1.2 (dibulatkan ke kelipatan 10 terdekat)
@@ -190,12 +330,14 @@ class GameManager {
         this.totalSpikesInStage = Math.min(12, 3 + this.stage);
         const enemyPoints = this.totalSpikesInStage * this.enemyValue;
 
-        // Total kuota koin yang harus dikumpulkan agar pas memenuhi targetScore
-        this.totalCoinsInStage = Math.max(3, Math.round((this.targetScore - enemyPoints) / this.coinValue));
+        // Total kuota Soul yang harus dikumpulkan agar pas memenuhi targetScore
+        this.totalSoulsInStage = Math.max(3, Math.round((this.targetScore - enemyPoints) / this.soulValue));
+        this.totalCoinsInStage = this.totalSoulsInStage;
 
         // Simpan data antrean spawn cadangan (reserve)
         this.spikesRemainingToSpawn = this.totalSpikesInStage;
-        this.coinsRemainingToSpawn = this.totalCoinsInStage;
+        this.soulsRemainingToSpawn = this.totalSoulsInStage;
+        this.coinsRemainingToSpawn = this.totalSoulsInStage;
         this.type2EnemiesSpawnedInStage = 0;
     }
 
@@ -308,13 +450,18 @@ class GameManager {
         }
     }
 
-    replenishCoins() {
-        // Isi arena hingga maksimal 5 koin aktif selama masih ada kuota stage tersisa
-        while (this.coins.length < this.maxActiveCoins && this.coinsRemainingToSpawn > 0) {
-            const coin = new Coin(this.canvas.width, this.canvas.height, this.hazards, this.player);
-            this.coins.push(coin);
-            this.coinsRemainingToSpawn--;
+    replenishSouls() {
+        // Isi arena hingga maksimal 5 Soul aktif selama masih ada kuota stage tersisa
+        while (this.souls.length < this.maxActiveSouls && this.soulsRemainingToSpawn > 0) {
+            const soul = new Soul(this.canvas.width, this.canvas.height, this.hazards, this.player);
+            this.souls.push(soul);
+            this.soulsRemainingToSpawn--;
+            this.coinsRemainingToSpawn = this.soulsRemainingToSpawn;
         }
+    }
+
+    replenishCoins() {
+        this.replenishSouls();
     }
 
     playSound(audioElement, fallbackSrc, volume = 0.6) {
@@ -374,7 +521,17 @@ class GameManager {
     }
 
     startGame() {
-        if (this.gameState !== "MENU") return;
+        if (this.gameState !== "MENU") {
+            // Jika dipanggil saat LOADING (misal dari headless test suite)
+            if (this.gameState === "LOADING") {
+                if (this.loadingOverlay) this.loadingOverlay.classList.add("hidden");
+                if (this.mainMenuOverlay) this.mainMenuOverlay.classList.add("hidden");
+                this.gameState = "PLAYING";
+                this.timer.start();
+                this.triggerInitialSkillsCooldown();
+            }
+            return;
+        }
         this.gameState = "PLAYING";
         if (this.mainMenuOverlay) {
             this.mainMenuOverlay.classList.add("hidden");
@@ -822,39 +979,7 @@ class GameManager {
             }
         });
 
-        if (this.bgUploadInput) {
-            this.bgUploadInput.addEventListener("change", (event) => {
-                const file = event.target.files && event.target.files[0];
-                if (!file) return;
 
-                // Batasi berkas maksimal 5MB dan hanya izinkan raster image murni (mencegah SVG XSS injection)
-                const allowedTypes = ["image/png", "image/jpeg", "image/webp", "image/gif"];
-                const maxSizeBytes = 5 * 1024 * 1024;
-
-                if (!allowedTypes.includes(file.type)) {
-                    this.showDangerAlert("Format gambar tidak didukung! Gunakan PNG/JPG/WebP/GIF.");
-                    event.target.value = "";
-                    return;
-                }
-
-                if (file.size > maxSizeBytes) {
-                    this.showDangerAlert("Ukuran gambar terlalu besar! Maksimal 5MB.");
-                    event.target.value = "";
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    if (typeof e.target.result === "string" && e.target.result.startsWith("data:image/")) {
-                        this.backgroundImage.src = e.target.result;
-                    }
-                };
-                reader.onerror = () => {
-                    this.showDangerAlert("Gagal memuat berkas gambar latar belakang!");
-                };
-                reader.readAsDataURL(file);
-            });
-        }
 
         // Main Menu Play Button
         if (this.playBtn) {
@@ -958,7 +1083,7 @@ class GameManager {
         const nextTarget = Math.round((100 * Math.pow(1.2, nextStageNum - 1)) / 10) * 10;
         const nextSpikes = Math.min(12, 3 + nextStageNum);
         const nextSpikePoints = nextSpikes * this.enemyValue;
-        const nextCoins = Math.max(3, Math.round((nextTarget - nextSpikePoints) / this.coinValue));
+        const nextSouls = Math.max(3, Math.round((nextTarget - nextSpikePoints) / this.soulValue));
 
         if (this.stageClearTitle) {
             this.stageClearTitle.textContent = `Stage ${this.stage} Cleared! 🎉`;
@@ -973,7 +1098,7 @@ class GameManager {
             this.nextStageTarget.textContent = `${nextTarget} Poin`;
         }
         if (this.nextStageSpikes) {
-            this.nextStageSpikes.textContent = `Total Kuota: ${nextSpikes} Enemy (${nextSpikePoints} Pts) + ${nextCoins} Koin (${nextCoins * this.coinValue} Pts) [Maksimal 5 di layar]`;
+            this.nextStageSpikes.textContent = `Total Kuota: ${nextSpikes} Enemy (${nextSpikePoints} Pts) + ${nextSouls} Soul (${nextSouls * this.soulValue} Pts) [Maksimal 5 di layar]`;
         }
 
         if (this.stageClearOverlay) {
@@ -1006,16 +1131,21 @@ class GameManager {
         this.activeBeams = [];
         this.particles = [];
 
-        // Bersihkan enemy DOM elements lama
+        // Bersihkan enemy dan soul DOM elements lama
         this.hazards.forEach((h) => {
             if (h.destroy) h.destroy();
         });
         this.hazards = [];
-        this.coins = [];
+
+        this.souls.forEach((s) => {
+            if (s.destroy) s.destroy();
+        });
+        this.souls = [];
+        this.coins = this.souls;
 
         // Isi ulang hingga maksimal 5 dari kuota baru
         this.replenishHazards();
-        this.replenishCoins();
+        this.replenishSouls();
 
         // Inisialisasi ulang tepat 2 potion untuk stage baru
         this.initStagePotions();
@@ -1084,15 +1214,20 @@ class GameManager {
         this.player.reset();
         this.updateHpDisplay();
 
-        // Bersihkan enemy DOM elements lama
+        // Bersihkan enemy dan soul DOM elements lama
         this.hazards.forEach((h) => {
             if (h.destroy) h.destroy();
         });
         this.hazards = [];
-        this.coins = [];
+
+        this.souls.forEach((s) => {
+            if (s.destroy) s.destroy();
+        });
+        this.souls = [];
+        this.coins = this.souls;
 
         this.replenishHazards();
-        this.replenishCoins();
+        this.replenishSouls();
 
         // Reset ulang 2 potion untuk restart game
         this.initStagePotions();
@@ -1381,17 +1516,29 @@ class GameManager {
 
         this.updateParticles();
 
-        // Coin collection check (1 coin = 10 poin)
-        for (let i = this.coins.length - 1; i >= 0; i--) {
-            const coin = this.coins[i];
-            if (this.checkCircleRectCollision(coin.x, coin.y, this.coinRadius, this.player)) {
-                this.coins.splice(i, 1);
-                this.stageScore += this.coinValue;
-                this.totalScore += this.coinValue;
+        // Update pergerakan Soul (bergerak perlahan dan menjauhi Player dengan osilasi acak)
+        this.souls.forEach((soul) => {
+            if (soul.update) {
+                soul.update(this.player, this.canvas.width, this.canvas.height);
+            }
+        });
+
+        // Soul collection check (1 Soul = 10 poin)
+        for (let i = this.souls.length - 1; i >= 0; i--) {
+            const soul = this.souls[i];
+            const centerX = soul.width ? (soul.x + soul.width / 2) : soul.x;
+            const centerY = soul.height ? (soul.y + soul.height / 2) : soul.y;
+            const radius = soul.radius || this.coinRadius || 16;
+
+            if (this.checkCircleRectCollision(centerX, centerY, radius, this.player)) {
+                if (soul.destroy) soul.destroy();
+                this.souls.splice(i, 1);
+                this.stageScore += this.soulValue;
+                this.totalScore += this.soulValue;
                 this.updateScoreDisplay();
 
-                // Spawn koin baru dari antrean jika kuota stage masih ada (maksimal 5 di layar)
-                this.replenishCoins();
+                // Spawn Soul baru dari antrean jika kuota stage masih ada (maksimal 5 di layar)
+                this.replenishSouls();
 
                 this.checkGameStatus();
             }
@@ -1484,7 +1631,7 @@ class GameManager {
         }
 
         this.hazards.forEach((hazard) => hazard.draw(this.ctx));
-        this.coins.forEach((coin) => coin.draw(this.ctx, this.coinColor, this.coinRadius));
+        this.souls.forEach((soul) => soul.draw(this.ctx, this.coinColor, this.coinRadius));
         this.potions.forEach((potion) => potion.draw(this.ctx));
 
         // Draw projectiles, continuous beams & destruction particles
