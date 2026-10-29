@@ -17,47 +17,48 @@
         <!-- Heal Alert Banner -->
         <div id="heal-alert" class="heal-banner">+1 HP!</div>
 
-        <!-- Header with Game Title, Stats, and HUD Restart Button -->
+        <!-- Header with Game Title, Stats, HUD Restart Button, and Skills Bar -->
         <header class="game-header">
-            <h1>Wandering Witch Journey</h1>
-            <div class="stats-panel">
-                <div class="stat-item">
-                    <span>Stage: </span>
-                    <strong id="stage-display" style="color: #facc15;">1</strong>
+            <div class="header-main-row">
+                <h1>Wandering Witch Journey</h1>
+                <div class="stats-panel">
+                    <div class="stat-item">
+                        <span>Stage: </span>
+                        <strong id="stage-display" style="color: #facc15;">1</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Score: </span>
+                        <strong id="score-display">0 / 100</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>HP: </span>
+                        <strong id="hp-display" class="hp-display">❤️❤️❤️ (3/3)</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Time: </span>
+                        <strong id="timer-display">60s</strong>
+                    </div>
+                    <button id="header-restart-btn" class="header-btn">Restart</button>
                 </div>
-                <div class="stat-item">
-                    <span>Score: </span>
-                    <strong id="score-display">0 / 100</strong>
-                </div>
-                <div class="stat-item">
-                    <span>HP: </span>
-                    <strong id="hp-display" class="hp-display">❤️❤️❤️ (3/3)</strong>
-                </div>
-                <div class="stat-item">
-                    <span>Time: </span>
-                    <strong id="timer-display">60s</strong>
-                </div>
+            </div>
 
-                <!-- Skill Cooldown Indicators (Dynamic Loadout Slot Z, X, C) -->
-                <div class="skills-hud">
-                    <div class="skill-badge" id="slot0-badge">
-                        <span class="skill-key">Z</span>
-                        <span class="skill-name" id="slot0-name">Skill 1</span>
-                        <span class="skill-status" id="slot0-status">READY</span>
-                    </div>
-                    <div class="skill-badge" id="slot1-badge">
-                        <span class="skill-key">X</span>
-                        <span class="skill-name" id="slot1-name">Skill 2</span>
-                        <span class="skill-status" id="slot1-status">READY</span>
-                    </div>
-                    <div class="skill-badge" id="slot2-badge">
-                        <span class="skill-key">C</span>
-                        <span class="skill-name" id="slot2-name">Skill 5</span>
-                        <span class="skill-status" id="slot2-status">READY</span>
-                    </div>
+            <!-- Skill Cooldown Indicators (Dynamic Loadout Slot Z, X, C) -->
+            <div class="skills-hud">
+                <div class="skill-badge" id="slot0-badge">
+                    <span class="skill-key">Z</span>
+                    <span class="skill-name" id="slot0-name">Skill 1</span>
+                    <span class="skill-status" id="slot0-status">READY</span>
                 </div>
-
-                <button id="header-restart-btn" class="header-btn">Restart</button>
+                <div class="skill-badge" id="slot1-badge">
+                    <span class="skill-key">X</span>
+                    <span class="skill-name" id="slot1-name">Skill 2</span>
+                    <span class="skill-status" id="slot1-status">READY</span>
+                </div>
+                <div class="skill-badge" id="slot2-badge">
+                    <span class="skill-key">C</span>
+                    <span class="skill-name" id="slot2-name">Skill 5</span>
+                    <span class="skill-status" id="slot2-status">READY</span>
+                </div>
             </div>
         </header>
 

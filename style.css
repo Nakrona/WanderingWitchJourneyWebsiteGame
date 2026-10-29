@@ -24,26 +24,47 @@ body {
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 840px;
+    min-width: 840px;
+    max-width: 840px;
+    box-sizing: border-box;
 }
 
 .game-header {
+    width: 800px;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+
+.header-main-row {
     width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
 }
 
-.game-header h1 {
+.header-main-row h1 {
     font-size: 20px;
     color: #e2e8f0;
+    white-space: nowrap;
+    margin: 0;
 }
 
 .stats-panel {
     display: flex;
     align-items: center;
-    gap: 15px;
-    font-size: 18px;
+    gap: 14px;
+    font-size: 15px;
+}
+
+.stat-item {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
 }
 
 .stat-item span {
@@ -52,6 +73,27 @@ body {
 
 .stat-item strong {
     color: #38bdf8;
+    font-variant-numeric: tabular-nums;
+}
+
+#stage-display {
+    min-width: 14px;
+    text-align: left;
+}
+
+#score-display {
+    min-width: 66px;
+    text-align: left;
+}
+
+#timer-display {
+    min-width: 32px;
+    text-align: left;
+}
+
+#hp-display {
+    min-width: 110px;
+    text-align: left;
 }
 
 /* Header Restart Button */
@@ -161,16 +203,25 @@ body {
     position: relative;
     width: 800px;
     height: 480px;
+    min-width: 800px;
+    max-width: 800px;
+    min-height: 480px;
+    max-height: 480px;
+    flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 #gameCanvas {
     position: absolute;
     top: 0;
     left: 0;
+    width: 800px;
+    height: 480px;
     background-color: #0f172a;
     border: 3px solid #334155;
     border-radius: 8px;
     display: block;
+    box-sizing: border-box;
 }
 
 /* Player Character GIF Styling */
@@ -467,24 +518,29 @@ body {
     transition: transform 0.05s linear;
 }
 
-/* Skills Cooldown HUD */
+/* Skills Cooldown HUD - Fixed Grid Layout to Prevent Layout Shifts */
 .skills-hud {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: 6px;
+    width: 800px;
+    max-width: 800px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    box-sizing: border-box;
 }
 
 .skill-badge {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 6px;
     background: #0f172a;
     border: 1px solid #334155;
-    padding: 4px 8px;
+    padding: 5px 10px;
     border-radius: 6px;
     font-size: 13px;
-    transition: all 0.2s ease;
+    height: 34px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, opacity 0.2s ease;
 }
 
 .skill-key {
@@ -494,19 +550,31 @@ body {
     padding: 1px 6px;
     border-radius: 4px;
     font-size: 11px;
+    min-width: 20px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
 .skill-name {
     color: #94a3b8;
     font-size: 12px;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-left: 2px;
+    text-align: left;
 }
 
 .skill-status {
     color: #4ade80;
     font-weight: 700;
     font-size: 11px;
-    min-width: 42px;
-    text-align: center;
+    min-width: 72px;
+    text-align: right;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 .skill-badge.cooldown {
@@ -520,6 +588,10 @@ body {
 
 .skill-badge.cooldown .skill-status {
     color: #f59e0b;
+}
+
+.skill-badge.active .skill-status {
+    color: #38bdf8;
 }
 
 /* Projectile GIF Styling */
