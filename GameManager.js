@@ -116,7 +116,7 @@ class GameManager {
         // Background Music (BGM) & Sound Effects (SFX) Setup
         this.bgmAudio = document.getElementById("bgm-audio") || new Audio("BGM_LonelyWitch.mp3");
         this.bgmAudio.loop = true;
-        this.bgmAudio.volume = 0.45;
+        this.bgmAudio.volume = 0.6;
         this.isBgmMuted = false;
 
         this.sfxSkillCast = document.getElementById("sfx-skill-cast") || new Audio("SkillCasting.mp3");
@@ -131,21 +131,30 @@ class GameManager {
         this.sfxLose.preload = "auto";
         this.sfxHeal.preload = "auto";
 
-        // Unlock audio on initial user interaction to conform with browser autoplay policies
+        // Unlock audio on ANY initial user interaction (click, keydown, pointerdown)
         const unlockAudio = () => {
-            [this.bgmAudio, this.sfxSkillCast, this.sfxHit, this.sfxWin, this.sfxLose, this.sfxHeal].forEach((sfx) => {
-                if (sfx && typeof sfx.load === "function") {
-                    sfx.load();
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+                if (!window._gameAudioCtx) {
+                    window._gameAudioCtx = new AudioCtx();
                 }
-            });
-            if (this.gameState === "PLAYING" && !this.isBgmMuted) {
+                if (window._gameAudioCtx.state === "suspended") {
+                    window._gameAudioCtx.resume();
+                }
+            }
+
+            // Immediately start BGM on first interaction (whether in Menu or in Gameplay)
+            if (!this.isBgmMuted) {
                 this.playBGM();
             }
+
             window.removeEventListener("keydown", unlockAudio);
             window.removeEventListener("click", unlockAudio);
+            window.removeEventListener("pointerdown", unlockAudio);
         };
         window.addEventListener("keydown", unlockAudio, { once: true });
         window.addEventListener("click", unlockAudio, { once: true });
+        window.addEventListener("pointerdown", unlockAudio, { once: true });
 
         // Dedicated Timer Instance
         this.timer = new Timer(
@@ -480,33 +489,25 @@ class GameManager {
         this.replenishSouls();
     }
 
-    playSound(audioElement, fallbackSrc, volume = 0.6) {
+    playSound(audioElement, fallbackSrc, volume = 0.7) {
         try {
-            let sound = null;
-            if (audioElement && typeof audioElement.cloneNode === "function") {
-                sound = audioElement.cloneNode();
-            } else {
-                sound = new Audio(fallbackSrc);
+            if (audioElement) {
+                // If primary element is idle, rewind and play directly (fastest, uses cached buffer)
+                if (audioElement.paused || audioElement.ended) {
+                    audioElement.currentTime = 0;
+                    audioElement.volume = volume;
+                    const p = audioElement.play();
+                    if (p !== undefined) p.catch(() => {});
+                    return;
+                }
             }
+            // Overlapping sounds (rapid casting/hits) use cloned node
+            const sound = (audioElement && typeof audioElement.cloneNode === "function")
+                ? audioElement.cloneNode()
+                : new Audio(fallbackSrc);
             sound.volume = volume;
-
-            // Bersihkan instance audio saat pemutaran selesai untuk mencegah kebocoran memori (memory leak)
-            const cleanup = () => {
-                sound.removeEventListener("ended", cleanup);
-                sound.removeEventListener("error", cleanup);
-                sound.pause();
-                sound.src = "";
-            };
-            sound.addEventListener("ended", cleanup, { once: true });
-            sound.addEventListener("error", cleanup, { once: true });
-
-            const playPromise = sound.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(() => {
-                    // Browser autoplay policy prevention fallback
-                    cleanup();
-                });
-            }
+            const p = sound.play();
+            if (p !== undefined) p.catch(() => {});
         } catch (e) {
             try {
                 const sound = new Audio(fallbackSrc);
@@ -517,32 +518,50 @@ class GameManager {
     }
 
     playSkillCastingSound() {
-        this.playSound(this.sfxSkillCast, "SkillCasting.mp3", 0.65);
+        this.playSound(this.sfxSkillCast, "SkillCasting.mp3", 0.75);
     }
 
     playHitSound() {
-        this.playSound(this.sfxHit, "Hit.mp3", 0.7);
+        this.playSound(this.sfxHit, "Hit.mp3", 0.8);
     }
 
     playWinSound() {
-        this.playSound(this.sfxWin, "win.mp3", 0.75);
+        this.playSound(this.sfxWin, "win.mp3", 0.85);
     }
 
     playLoseSound() {
-        this.playSound(this.sfxLose, "lose.mp3", 0.75);
+        this.playSound(this.sfxLose, "lose.mp3", 0.85);
     }
 
     playHealSound() {
-        this.playSound(this.sfxHeal, "heal.mp3", 0.7);
+        this.playSound(this.sfxHeal, "heal.mp3", 0.8);
     }
 
     playBGM() {
         if (!this.bgmAudio || this.isBgmMuted) return;
         try {
-            this.bgmAudio.volume = 0.45;
+            this.bgmAudio.volume = 0.6;
             const playPromise = this.bgmAudio.play();
             if (playPromise !== undefined) {
-                playPromise.catch(() => {});
+                playPromise.then(() => {
+                    if (this.bgmToggleBtn) {
+                        this.bgmToggleBtn.textContent = "Musik: ON";
+                        this.bgmToggleBtn.classList.remove("muted");
+                    }
+                }).catch((err) => {
+                    // Browser autoplay policy requires user interaction first
+                    const retry = () => {
+                        if (!this.isBgmMuted) {
+                            this.bgmAudio.play().catch(() => {});
+                        }
+                        window.removeEventListener("click", retry);
+                        window.removeEventListener("keydown", retry);
+                        window.removeEventListener("pointerdown", retry);
+                    };
+                    window.addEventListener("click", retry, { once: true });
+                    window.addEventListener("keydown", retry, { once: true });
+                    window.addEventListener("pointerdown", retry, { once: true });
+                });
             }
         } catch (e) {}
     }
@@ -661,6 +680,10 @@ class GameManager {
 
         this.refreshSkillSelectionUI();
         this.updateSkillsCooldownHUD();
+        this.playSkillCastingSound();
+        if (this.bgmAudio && this.bgmAudio.paused && !this.isBgmMuted) {
+            this.playBGM();
+        }
     }
 
     /**
